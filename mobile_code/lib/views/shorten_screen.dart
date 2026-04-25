@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../services/history_service.dart';
 
-
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
@@ -66,7 +65,8 @@ class _ShortenScreenState extends State<ShortenScreen> {
       // Tambahkan ke riwayat global (HistoryService)
       HistoryService.instance.addHistoryItem(
         type: 'PENDEK',
-        title: originalUrlInput, // Gunakan url asli sebagai judul untuk dropdown
+        title:
+            originalUrlInput, // Gunakan url asli sebagai judul untuk dropdown
         originalUrl: originalUrlInput,
         shortUrl: currentShortUrl,
       );
@@ -317,7 +317,11 @@ class _ShortenScreenState extends State<ShortenScreen> {
                   color: Color(0xFFE0FDF4),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_outline, color: Color(0xFF00C48C), size: 20),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  color: Color(0xFF00C48C),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -346,7 +350,11 @@ class _ShortenScreenState extends State<ShortenScreen> {
             originalUrlInput,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 16),
           Container(
@@ -387,7 +395,11 @@ class _ShortenScreenState extends State<ShortenScreen> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: const Icon(Icons.copy, size: 16, color: primaryTosca),
+                      child: const Icon(
+                        Icons.copy,
+                        size: 16,
+                        color: primaryTosca,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -397,7 +409,11 @@ class _ShortenScreenState extends State<ShortenScreen> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: const Icon(Icons.open_in_new, size: 16, color: primaryTosca),
+                      child: const Icon(
+                        Icons.open_in_new,
+                        size: 16,
+                        color: primaryTosca,
+                      ),
                     ),
                   ],
                 ),
@@ -479,7 +495,10 @@ class _ShortenScreenState extends State<ShortenScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.qr_code, size: 16),
-                  label: const Text("Buat QR", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  label: const Text(
+                    "Buat QR",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.grey[800],
                     backgroundColor: const Color(0xFFF3F4F6),
@@ -496,10 +515,15 @@ class _ShortenScreenState extends State<ShortenScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () => setState(() => _showResult = false),
                   icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: const Text("Persingkat Lagi", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  label: const Text(
+                    "Persingkat Lagi",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: primaryTosca,
-                    backgroundColor: const Color(0xFFCCFBF1), // Lebih cerah seperti desain
+                    backgroundColor: const Color(
+                      0xFFCCFBF1,
+                    ), // Lebih cerah seperti desain
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
