@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'views/welcome_screen.dart';
 import 'views/login_screen.dart';
 import 'views/register_screen.dart';
-import 'views/shorten_screen.dart';
-
+import 'views/main_screen.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -23,10 +22,10 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
       },
       onGenerateRoute: (settings) {
-        if (settings.name == '/shorten') {
+        if (settings.name == '/main') {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
-            builder: (context) => ShortenScreen(
+            builder: (context) => MainScreen(
               isGuest: args['isGuest'],
               userEmail: args['userEmail'],
             ),

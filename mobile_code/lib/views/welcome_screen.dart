@@ -66,7 +66,7 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacementNamed(
                       context,
-                      '/shorten',
+                      '/main',
                       arguments: {'isGuest': true, 'userEmail': 'Guest'},
                     );
                   },

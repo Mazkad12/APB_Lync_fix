@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
         Navigator.pushReplacementNamed(
           context,
-          '/shorten',
+          '/main',
           arguments: {'isGuest': false, 'userEmail': _emailController.text},
         );
       }

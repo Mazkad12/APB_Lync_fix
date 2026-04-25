@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../widgets/custom_bottom_nav.dart';
+import '../services/history_service.dart';
+
 
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
@@ -24,9 +27,6 @@ class _ShortenScreenState extends State<ShortenScreen> {
   bool _showResult = false;
   String currentShortUrl = "";
   String originalUrlInput = "";
-
-  // List Riwayat (Frontend Simulation)
-  List<Map<String, String>> historyList = [];
 
   @override
   void initState() {
@@ -63,11 +63,13 @@ class _ShortenScreenState extends State<ShortenScreen> {
       currentShortUrl = "https://ly.nc/${_generateRandomCode()}";
       _showResult = true;
 
-      // Tambahkan ke riwayat
-      historyList.insert(0, {
-        'short': currentShortUrl,
-        'original': originalUrlInput,
-      });
+      // Tambahkan ke riwayat global (HistoryService)
+      HistoryService.instance.addHistoryItem(
+        type: 'PENDEK',
+        title: originalUrlInput, // Gunakan url asli sebagai judul untuk dropdown
+        originalUrl: originalUrlInput,
+        shortUrl: currentShortUrl,
+      );
 
       _urlController.clear();
     });
@@ -204,7 +206,6 @@ class _ShortenScreenState extends State<ShortenScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -309,15 +310,24 @@ class _ShortenScreenState extends State<ShortenScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.green, size: 22),
-              SizedBox(width: 8),
-              Text(
-                "Tautan Berhasil!",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: primaryTosca,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE0FDF4),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_outline, color: Color(0xFF00C48C), size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  "Tautan Berhasil Dipersingkat!",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF1F2937),
+                  ),
                 ),
               ),
             ],
@@ -334,16 +344,16 @@ class _ShortenScreenState extends State<ShortenScreen> {
           const SizedBox(height: 4),
           Text(
             originalUrlInput,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, color: Colors.black87),
+            style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFF1FDFB),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFE0F2F1)),
             ),
             child: Column(
@@ -358,28 +368,123 @@ class _ShortenScreenState extends State<ShortenScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  currentShortUrl,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: primaryTosca,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        currentShortUrl,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: primaryTosca,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: const Icon(Icons.copy, size: 16, color: primaryTosca),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: const Icon(Icons.open_in_new, size: 16, color: primaryTosca),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _showResult = false),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text("Baru"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: primaryTosca,
-                    side: const BorderSide(color: primaryTosca),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "KLIK",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "0",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "DIBUAT",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Baru saja",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.qr_code, size: 16),
+                  label: const Text("Buat QR", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.grey[800],
+                    backgroundColor: const Color(0xFFF3F4F6),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -389,11 +494,14 @@ class _ShortenScreenState extends State<ShortenScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.copy, size: 18),
-                  label: const Text("Salin"),
+                  onPressed: () => setState(() => _showResult = false),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text("Persingkat Lagi", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryTosca,
+                    foregroundColor: primaryTosca,
+                    backgroundColor: const Color(0xFFCCFBF1), // Lebih cerah seperti desain
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -409,23 +517,70 @@ class _ShortenScreenState extends State<ShortenScreen> {
 
   // WIDGET RIWAYAT
   Widget _buildHistorySection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Riwayat Terakhir",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...historyList
-              .map(
-                (item) => Container(
+    return ValueListenableBuilder<List<Map<String, dynamic>>>(
+      valueListenable: HistoryService.instance.historyList,
+      builder: (context, history, child) {
+        if (history.isEmpty) {
+          return const SizedBox.shrink(); // Jangan tampilkan jika riwayat kosong
+        }
+
+        // Ambil 3 riwayat terbaru untuk ditampilkan di ShortenScreen
+        final recentHistory = history.take(3).toList();
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Riwayat Terakhir",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                  Row(
+                    children: const [
+                      Text(
+                        "Lihat Semua",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: primaryTosca,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...recentHistory.map((item) {
+                // Tentukan warna icon berdasarkan tipe
+                Color iconBgColor;
+                Color iconColor;
+                IconData iconData;
+
+                if (item['type'] == 'SCAN') {
+                  iconBgColor = const Color(0xFFE0FDF4);
+                  iconColor = const Color(0xFF00C48C);
+                  iconData = Icons.qr_code_scanner;
+                } else if (item['type'] == 'PENDEK') {
+                  iconBgColor = const Color(0xFFF3E8FF);
+                  iconColor = const Color(0xFFA855F7);
+                  iconData = Icons.link;
+                } else {
+                  iconBgColor = const Color(0xFFE0F2FE);
+                  iconColor = const Color(0xFF3B82F6);
+                  iconData = Icons.qr_code_2;
+                }
+
+                return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -435,20 +590,29 @@ class _ShortenScreenState extends State<ShortenScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.link, color: primaryTosca),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: iconBgColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(iconData, color: iconColor, size: 20),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item['short']!,
+                              item['title'],
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              item['original']!,
+                              item['shortUrl'] ?? item['originalUrl'] ?? '',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -462,93 +626,12 @@ class _ShortenScreenState extends State<ShortenScreen> {
                       const Icon(Icons.copy, size: 18, color: Colors.grey),
                     ],
                   ),
-                ),
-              )
-              .toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      height: 90,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+                );
+              }).toList(),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(Icons.qr_code_scanner_rounded, "Scan", false),
-          _navItem(Icons.link_rounded, "Shorten", true),
-          Transform.translate(
-            offset: const Offset(0, -15),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: primaryTosca,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryTosca.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.grid_view_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-          _navItem(Icons.history_rounded, "History", false),
-          _navItem(Icons.person_outline_rounded, "Profile", false),
-        ],
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool isActive) {
-    return InkWell(
-      onTap: () {},
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? primaryTosca : Colors.grey[400],
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: isActive ? primaryTosca : Colors.grey[400],
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            ),
-          ),
-          if (isActive)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              width: 5,
-              height: 5,
-              decoration: const BoxDecoration(
-                color: primaryTosca,
-                shape: BoxShape.circle,
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
