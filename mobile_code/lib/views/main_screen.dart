@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'shorten_screen.dart';
 import 'history_screen.dart';
+import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final bool isGuest;
@@ -30,7 +31,7 @@ class _MainScreenState extends State<MainScreen> {
       ShortenScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       const Center(child: Text("Generate QR Screen (Coming Soon)")),
       const HistoryScreen(),
-      const Center(child: Text("Profile Screen (Coming Soon)")),
+      ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
     ];
   }
 
