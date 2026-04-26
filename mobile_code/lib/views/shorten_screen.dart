@@ -7,11 +7,13 @@ import '../services/history_service.dart';
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
+  final VoidCallback? onViewAll;
 
   const ShortenScreen({
     super.key,
     required this.isGuest,
     required this.userEmail,
+    this.onViewAll,
   });
 
   @override
@@ -633,19 +635,22 @@ class _ShortenScreenState extends State<ShortenScreen> {
                       color: Color(0xFF1F2937),
                     ),
                   ),
-                  Row(
-                    children: const [
-                      Text(
-                        "Lihat Semua",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: primaryTosca,
+                  GestureDetector(
+                    onTap: widget.onViewAll,
+                    child: Row(
+                      children: const [
+                        Text(
+                          "Lihat Semua",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: primaryTosca,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
-                    ],
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
+                      ],
+                    ),
                   ),
                 ],
               ),
