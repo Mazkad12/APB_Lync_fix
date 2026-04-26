@@ -8,6 +8,8 @@ import 'package:mobile_code/viewmodels/auth/auth_event.dart';
 import 'package:mobile_code/viewmodels/history/history_bloc.dart';
 import 'package:mobile_code/viewmodels/scan/scan_bloc.dart';
 
+import 'firebase_options.dart';
+
 import 'views/welcome_screen.dart';
 import 'views/login_screen.dart';
 import 'views/register_screen.dart';
@@ -16,12 +18,10 @@ import 'views/main_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Try to initialize Firebase, but catch errors if configuration files are missing.
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint("Firebase initialization failed. Make sure google-services.json / GoogleService-Info.plist are present. Error: $e");
-  }
+  // Initialize Firebase with the generated options
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(const MyApp());
 }

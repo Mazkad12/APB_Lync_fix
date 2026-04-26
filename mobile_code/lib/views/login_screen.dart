@@ -26,17 +26,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin() {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
 
-    if (_emailController.text == 'admin@email.com' && _passwordController.text == 'admin') {
-      Navigator.pushReplacementNamed(
-        context,
-        '/main',
-        arguments: {'isGuest': false, 'userEmail': 'admin@email.com'},
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email atau password salah'), backgroundColor: Colors.red),
-      );
-    }
+    context.read<AuthBloc>().add(
+      LoginRequested(_emailController.text.trim(), _passwordController.text),
+    );
   }
 
   @override

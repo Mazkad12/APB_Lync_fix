@@ -8,6 +8,7 @@ import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
 import '../viewmodels/history/history_state.dart';
 import 'package:uuid/uuid.dart';
+import '../repositories/link_repository.dart';
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
@@ -102,10 +103,20 @@ class _ShortenScreenState extends State<ShortenScreen> {
   }
 
   // Fungsi saat tombol diklik
-  void _handleShortenAction() {
+  Future<void> _handleShortenAction() async {
+    final code = _generateRandomCode();
+    
+    // Menggunakan Firebase Local Emulator
+    // CATATAN: Karena Anda menjalankan aplikasi langsung dari komputer (tanpa Android Emulator), 
+    // kita menggunakan IP localhost standar yaitu 127.0.0.1
+    final baseUrl = "http://127.0.0.1:5001/lync-7cd15/asia-southeast2/redirect";
+    
+    // Simpan input asli sebelum dibersihkan
+    final String originalUrl = _urlController.text;
+    
     setState(() {
-      originalUrlInput = _urlController.text;
-      currentShortUrl = "https://ly.nc/${_generateRandomCode()}";
+      originalUrlInput = originalUrl;
+      currentShortUrl = "$baseUrl/$code";
       _showResult = true;
 
       // Tambahkan ke riwayat global
@@ -123,6 +134,15 @@ class _ShortenScreenState extends State<ShortenScreen> {
 
       _urlController.clear();
     });
+
+    // Simpan link ke collection global 'links' di Firestore untuk Serverless Redirect
+    try {
+      final linkRepo = LinkRepository();
+      await linkRepo.addLink(code, originalUrl);
+    } catch (e) {
+      // Error handling (bisa tambahkan snackbar error jika perlu)
+      debugPrint("Gagal menyimpan ke global links: $e");
+    }
   }
 
   @override

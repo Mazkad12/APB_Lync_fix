@@ -1,0 +1,21 @@
+# Firebase
+functions/node_modules/
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# Flutter
+mobile_code/build/
+mobile_code/.dart_tool/
+mobile_code/.flutter-plugins
+mobile_code/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
