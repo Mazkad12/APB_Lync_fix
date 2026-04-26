@@ -28,7 +28,11 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _pages = [
       const Center(child: Text("Scan Screen (Coming Soon)")),
-      ShortenScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
+      ShortenScreen(
+        isGuest: widget.isGuest,
+        userEmail: widget.userEmail,
+        onViewAll: () => _onTabTapped(3),
+      ),
       const Center(child: Text("Generate QR Screen (Coming Soon)")),
       const HistoryScreen(),
       ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),

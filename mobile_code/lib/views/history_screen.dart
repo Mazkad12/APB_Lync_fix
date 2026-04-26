@@ -332,7 +332,20 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("URL ASLI", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                        GestureDetector(onTap: () { Clipboard.setData(ClipboardData(text: originalUrl)); _showTopSnackBar(context, "URL asli disalin!", Icons.check_circle_outline, const Color(0xFF00C48C)); }, child: const Icon(Icons.copy, size: 14, color: Colors.grey)),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: originalUrl));
+                              _showTopSnackBar(context, "URL asli disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(Icons.copy, size: 14, color: Colors.grey),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -343,7 +356,20 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text("URL PENDEK", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          GestureDetector(onTap: () { Clipboard.setData(ClipboardData(text: shortUrl)); _showTopSnackBar(context, "URL pendek disalin!", Icons.check_circle_outline, const Color(0xFF00C48C)); }, child: const Icon(Icons.copy, size: 14, color: Color(0xFF006D66))),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: shortUrl));
+                                _showTopSnackBar(context, "URL pendek disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Icon(Icons.copy, size: 14, color: Color(0xFF006D66)),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
