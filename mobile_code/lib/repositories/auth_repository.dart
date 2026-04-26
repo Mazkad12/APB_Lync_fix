@@ -1,12 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepository {
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseAuth? _injectedAuth;
 
   AuthRepository({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+      : _injectedAuth = firebaseAuth;
 
-  Stream<User?> get user => _firebaseAuth.authStateChanges();
+  FirebaseAuth get _firebaseAuth => _injectedAuth ?? FirebaseAuth.instance;
+
+  Stream<User?> get user {
+    try {
+      return _firebaseAuth.authStateChanges();
+    } catch (e) {
+      return Stream.value(null);
+    }
+  }
 
   Future<User?> signUp({required String email, required String password}) async {
     try {
