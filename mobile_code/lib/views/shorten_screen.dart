@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/custom_bottom_nav.dart';
 import '../services/history_service.dart';
 
@@ -20,6 +21,45 @@ class ShortenScreen extends StatefulWidget {
 class _ShortenScreenState extends State<ShortenScreen> {
   final _urlController = TextEditingController();
   static const Color primaryTosca = Color(0xFF006D66);
+
+  // Fungsi untuk menampilkan snackbar di atas (Top SnackBar)
+  void _showTopSnackBar(BuildContext context, String message, IconData icon, Color color) {
+    OverlayState? overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    overlayState?.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 2), () => overlayEntry.remove());
+  }
 
   // Variable Logika Manual
   bool _isUrlValid = false;
@@ -79,129 +119,138 @@ class _ShortenScreenState extends State<ShortenScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // AREA HEADER + CARD MELAYANG
-                  SizedBox(
-                    height: _showResult ? 550 : 360,
-                    child: Stack(
-                      children: [
-                        // 1. Header Hijau Tosca
-                        Container(
-                          width: double.infinity,
-                          height: 240,
-                          color: primaryTosca,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 60,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                "LYNC",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                "Link Shortener",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "Ubah URL panjang menjadi tautan pendek instan",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // 2. Input Card Melayang (Berubah jadi Hasil jika diklik)
-                        Positioned(
-                          top: 160,
-                          left: 24,
-                          right: 24,
-                          child: _showResult
-                              ? _buildResultCard()
-                              : _buildInputCard(),
-                        ),
-                      ],
-                    ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // AREA HEADER + CARD MELAYANG
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 1. Header Hijau Tosca
+                Container(
+                  width: double.infinity,
+                  height: 240,
+                  color: primaryTosca,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 60,
                   ),
-
-                  // 3. Riwayat Terakhir (Hanya muncul jika sudah ada hasil)
-                  if (_showResult) _buildHistorySection(),
-
-                  const SizedBox(height: 10),
-
-                  // 4. Banner Mode Tamu
-                  if (widget.isGuest)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF9E7),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: const Color(0xFFFFE082).withOpacity(0.5),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.bolt_rounded,
-                              color: Colors.orange,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    "Mode Tamu",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF855D00),
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    "Riwayat tidak tersimpan permanen. Login untuk menyimpan semua tautan ke cloud.",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF855D00),
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "LYNC",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
                         ),
                       ),
-                    ),
-                ],
+                      SizedBox(height: 8),
+                      Text(
+                        "Link Shortener",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Ubah URL panjang menjadi tautan pendek instan",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 2. Input Card / Result Card
+                // Padding untuk memberikan ruang bagi card melayang
+              ],
+            ),
+            
+            // Container untuk menampung Card agar tetap bisa di-scroll dan punya ruang di bawah header
+            Transform.translate(
+              offset: const Offset(0, -80),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    // Kotak Input Selalu Tampil
+                    _buildInputCard(),
+                    
+                    // Jarak antara input dan hasil
+                    if (_showResult) ...[
+                      const SizedBox(height: 24),
+                      _buildResultCard(),
+                    ],
+                    
+                    const SizedBox(height: 32),
+                    
+                    // 3. Riwayat Terakhir (Selalu Tampil)
+                    _buildHistorySection(),
+                    
+                    const SizedBox(height: 24),
+
+                    // 4. Banner Mode Tamu (Jika Guest)
+                    if (widget.isGuest) _buildGuestBanner(),
+                    
+                    const SizedBox(height: 100), // Spasi bawah agar tidak mentok navbar
+                  ],
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuestBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9E7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFFE082).withOpacity(0.5),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.bolt_rounded,
+            color: Colors.orange,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  "Mode Tamu",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF855D00),
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  "Riwayat tidak tersimpan permanen. Login untuk menyimpan semua tautan ke cloud.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF855D00),
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -388,31 +437,48 @@ class _ShortenScreenState extends State<ShortenScreen> {
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: const Icon(
-                        Icons.copy,
-                        size: 16,
-                        color: primaryTosca,
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: currentShortUrl));
+                          _showTopSnackBar(context, "URL pendek disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: const Icon(
+                            Icons.copy,
+                            size: 16,
+                            color: primaryTosca,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: const Icon(
-                        Icons.open_in_new,
-                        size: 16,
-                        color: primaryTosca,
+                        onTap: () {
+                          // Logika buka link (Opsional)
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: const Icon(
+                            Icons.open_in_new,
+                            size: 16,
+                            color: primaryTosca,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -647,7 +713,21 @@ class _ShortenScreenState extends State<ShortenScreen> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.copy, size: 18, color: Colors.grey),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            String copyText = item['shortUrl'] ?? item['originalUrl'] ?? '';
+                            Clipboard.setData(ClipboardData(text: copyText));
+                            _showTopSnackBar(context, "Tautan disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.all(4.0),
+                            child: Icon(Icons.copy, size: 18, color: Colors.grey),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 );
