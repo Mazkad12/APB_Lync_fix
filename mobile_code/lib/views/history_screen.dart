@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/history_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/history_model.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_event.dart';
+import '../viewmodels/history/history_state.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  final bool isGuest;
+  final String? userEmail;
+
+  const HistoryScreen({super.key, required this.isGuest, this.userEmail});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -18,70 +25,81 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
       body: SafeArea(
-        child: ValueListenableBuilder<List<Map<String, dynamic>>>(
-          valueListenable: HistoryService.instance.historyList,
-          builder: (context, history, child) {
-            int scanCount = history.where((i) => i['type'] == 'SCAN').length;
-            int pendekCount = history.where((i) => i['type'] == 'PENDEK').length;
+        child: BlocBuilder<HistoryBloc, HistoryState>(
+          builder: (context, state) {
+            if (state is HistoryLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is HistoryError) {
+              return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+            } else if (state is HistoryLoaded) {
+              final history = state.history;
+              int scanCount = history.where((i) => i.type == 'SCAN').length;
+              int pendekCount = history.where((i) => i.type == 'PENDEK').length;
 
-            List<Map<String, dynamic>> filteredHistory = history;
-            if (activeFilter.startsWith('Scan')) {
-              filteredHistory = history.where((i) => i['type'] == 'SCAN').toList();
-            } else if (activeFilter.startsWith('Dipendekkan')) {
-              filteredHistory = history.where((i) => i['type'] == 'PENDEK').toList();
+              List<HistoryModel> filteredHistory = history;
+              if (activeFilter.startsWith('Scan')) {
+                filteredHistory = history.where((i) => i.type == 'SCAN').toList();
+              } else if (activeFilter.startsWith('Dipendekkan')) {
+                filteredHistory = history.where((i) => i.type == 'PENDEK').toList();
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Riwayat",
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: const Color(0xFFE0F2F1), borderRadius: BorderRadius.circular(20)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.history, size: 14, color: primaryTosca),
+                              const SizedBox(width: 4),
+                              Text("${history.length} item", style: const TextStyle(color: primaryTosca, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        _buildFilterChip('Semua', Icons.access_time_filled, activeFilter == 'Semua'),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('Scan ($scanCount)', Icons.qr_code_scanner, activeFilter.startsWith('Scan')),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('Dipendekkan ($pendekCount)', Icons.link, activeFilter.startsWith('Dipendekkan')),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: filteredHistory.isEmpty
+                        ? const Center(child: Text("Belum ada riwayat", style: TextStyle(color: Colors.grey)))
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: filteredHistory.length,
+                            itemBuilder: (context, index) => HistoryCardItem(
+                                data: filteredHistory[index], 
+                                isGuest: widget.isGuest, 
+                                userEmail: widget.userEmail
+                            ),
+                          ),
+                  ),
+                ],
+              );
             }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Riwayat",
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(color: const Color(0xFFE0F2F1), borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.history, size: 14, color: primaryTosca),
-                            const SizedBox(width: 4),
-                            Text("${history.length} item", style: const TextStyle(color: primaryTosca, fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      _buildFilterChip('Semua', Icons.access_time_filled, activeFilter == 'Semua'),
-                      const SizedBox(width: 12),
-                      _buildFilterChip('Scan ($scanCount)', Icons.qr_code_scanner, activeFilter.startsWith('Scan')),
-                      const SizedBox(width: 12),
-                      _buildFilterChip('Dipendekkan ($pendekCount)', Icons.link, activeFilter.startsWith('Dipendekkan')),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: filteredHistory.isEmpty
-                      ? const Center(child: Text("Belum ada riwayat", style: TextStyle(color: Colors.grey)))
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: filteredHistory.length,
-                          itemBuilder: (context, index) => HistoryCardItem(data: filteredHistory[index]),
-                        ),
-                ),
-              ],
-            );
+            return const Center(child: Text("Belum ada riwayat", style: TextStyle(color: Colors.grey)));
           },
         ),
       ),
@@ -112,8 +130,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 }
 
 class HistoryCardItem extends StatefulWidget {
-  final Map<String, dynamic> data;
-  const HistoryCardItem({Key? key, required this.data}) : super(key: key);
+  final HistoryModel data;
+  final bool isGuest;
+  final String? userEmail;
+
+  const HistoryCardItem({Key? key, required this.data, required this.isGuest, this.userEmail}) : super(key: key);
 
   @override
   State<HistoryCardItem> createState() => _HistoryCardItemState();
@@ -182,7 +203,7 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        HistoryService.instance.deleteHistoryItem(id);
+                        context.read<HistoryBloc>().add(DeleteHistory(id, userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
                         Navigator.pop(context);
                         _showTopSnackBar(context, "Item dihapus dari riwayat", Icons.info_outline, const Color(0xFF006D66).withOpacity(0.8));
                       },
@@ -248,8 +269,8 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      if (widget.data['id'] != null) {
-                        HistoryService.instance.updateHistoryTitle(widget.data['id'], _titleController.text);
+                      if (widget.data.id.isNotEmpty) {
+                        context.read<HistoryBloc>().add(UpdateHistoryTitle(widget.data.id, _titleController.text, userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
                         _showTopSnackBar(context, "Label berhasil disimpan!", Icons.check_circle_outline, const Color(0xFF00C48C));
                       }
                       Navigator.pop(context);
@@ -270,16 +291,17 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
 
   @override
   Widget build(BuildContext context) {
-    String type = widget.data['type'] ?? 'SCAN';
+    String type = widget.data.type;
     Color iconBgColor = type == 'SCAN' ? const Color(0xFFE0FDF4) : (type == 'PENDEK' ? const Color(0xFFF3E8FF) : const Color(0xFFE0F2FE));
     Color iconColor = type == 'SCAN' ? const Color(0xFF00C48C) : (type == 'PENDEK' ? const Color(0xFFA855F7) : const Color(0xFF3B82F6));
     IconData iconData = type == 'SCAN' ? Icons.qr_code_scanner : (type == 'PENDEK' ? Icons.link : Icons.qr_code_2);
     String badgeText = type;
 
-    String title = widget.data['title'] ?? '';
-    String originalUrl = widget.data['originalUrl'] ?? widget.data['url'] ?? '';
-    String shortUrl = widget.data['shortUrl'] ?? '';
-    String time = widget.data['time'] ?? 'Baru saja';
+    String title = widget.data.title;
+    String originalUrl = widget.data.originalUrl;
+    String shortUrl = widget.data.shortUrl ?? '';
+    // Formatter time sederhana, aslinya pakai timezone/intl
+    String time = "${widget.data.timestamp.hour}:${widget.data.timestamp.minute.toString().padLeft(2, '0')}";
     bool hasCustomLabel = title != originalUrl;
 
     return GestureDetector(
@@ -385,7 +407,7 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                   const SizedBox(width: 8),
                   _buildButton(label: "Salin", icon: Icons.copy, isPrimary: true, onPressed: () { Clipboard.setData(ClipboardData(text: shortUrl.isNotEmpty ? shortUrl : originalUrl)); _showTopSnackBar(context, "URL ${shortUrl.isNotEmpty ? 'pendek' : 'asli'} disalin!", Icons.check_circle_outline, const Color(0xFF00C48C)); }),
                   const SizedBox(width: 8),
-                  _buildDeleteButton(onPressed: () { if (widget.data['id'] != null) _showDeleteConfirmation(context, widget.data['id']); }),
+                  _buildDeleteButton(onPressed: () { if (widget.data.id.isNotEmpty) _showDeleteConfirmation(context, widget.data.id); }),
                 ],
               ),
             ],

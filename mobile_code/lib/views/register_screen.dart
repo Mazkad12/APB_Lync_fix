@@ -1,5 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/auth/auth_bloc.dart';
+import '../viewmodels/auth/auth_event.dart';
+import '../viewmodels/auth/auth_state.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,9 +26,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const Color primaryTosca = Color(0xFF006D66);
   static const Color textBlack = Color(0xFF111827);
 
+  void _handleRegister() {
+    if (_passwordController.text != _confirmController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      return;
+    }
+    context.read<AuthBloc>().add(RegisterRequested(_emailController.text, _passwordController.text, _nameController.text));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/main',
+            arguments: {'isGuest': false, 'userEmail': state.user.email ?? 'User'},
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        bool _isLoading = state is AuthLoading;
+        return Scaffold(
       backgroundColor: const Color(
         0xFFF8FAFB,
       ), // Background abu-abu sangat muda
@@ -104,10 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Sementara hanya navigasi balik atau print
-                    print("Tombol Daftar diklik (FE Mode)");
-                  },
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryTosca,
                     shape: RoundedRectangleBorder(
@@ -115,14 +140,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     elevation: 2,
                   ),
-                  child: const Text(
-                    "Buat Akun",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Buat Akun",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                 ),
               ),
 
@@ -152,6 +186,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 

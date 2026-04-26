@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_event.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'shorten_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
+import 'scanner_screen.dart';
+import 'generator_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final bool isGuest;
@@ -27,14 +32,14 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _pages = [
-      const Center(child: Text("Scan Screen (Coming Soon)")),
+      ScannerScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       ShortenScreen(
         isGuest: widget.isGuest,
         userEmail: widget.userEmail,
         onViewAll: () => _onTabTapped(3),
       ),
-      const Center(child: Text("Generate QR Screen (Coming Soon)")),
-      const HistoryScreen(),
+      GeneratorScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
+      HistoryScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
     ];
   }
@@ -78,6 +83,11 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Memuat history saat layar utama dipanggil
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+       context.read<HistoryBloc>().add(LoadHistory(userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
+    });
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
