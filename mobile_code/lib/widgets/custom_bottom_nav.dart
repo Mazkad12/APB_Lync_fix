@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/history_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_state.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -53,10 +55,12 @@ class CustomBottomNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (isHistoryTab)
-                ValueListenableBuilder<List<Map<String, dynamic>>>(
-                  valueListenable: HistoryService.instance.historyList,
-                  builder: (context, history, child) {
-                    final int count = history.length;
+                BlocBuilder<HistoryBloc, HistoryState>(
+                  builder: (context, state) {
+                    int count = 0;
+                    if (state is HistoryLoaded) {
+                      count = state.history.length;
+                    }
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [

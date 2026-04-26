@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/auth/auth_bloc.dart';
+import '../viewmodels/auth/auth_event.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -64,6 +67,9 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
+                    // Trigger Guest Mode in BLoC
+                    context.read<AuthBloc>().add(GuestLoginRequested());
+                    
                     Navigator.pushReplacementNamed(
                       context,
                       '/main',

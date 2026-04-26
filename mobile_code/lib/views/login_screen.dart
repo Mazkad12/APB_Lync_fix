@@ -1,5 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/auth/auth_bloc.dart';
+import '../viewmodels/auth/auth_event.dart';
+import '../viewmodels/auth/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,33 +18,38 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _obscurePass = true;
-  bool _isLoading = false;
 
   // Warna sesuai referensi desain Lync kamu
   static const Color primaryTosca = Color(0xFF006D66);
   static const Color textBlack = Color(0xFF111827);
 
   void _handleLogin() {
-    if (_emailController.text.isEmpty) return;
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
 
-    setState(() => _isLoading = true);
-
-    // Simulasi loading sebentar agar terlihat profesional saat demo
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        Navigator.pushReplacementNamed(
-          context,
-          '/main',
-          arguments: {'isGuest': false, 'userEmail': _emailController.text},
-        );
-      }
-    });
+    context.read<AuthBloc>().add(
+        LoginRequested(_emailController.text, _passwordController.text),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          Navigator.pushReplacementNamed(
+            context,
+            '/main',
+            arguments: {'isGuest': false, 'userEmail': state.user.email ?? 'User'},
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        bool _isLoading = state is AuthLoading;
+        return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -203,6 +212,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 

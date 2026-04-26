@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/history_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../viewmodels/auth/auth_bloc.dart';
+import '../viewmodels/auth/auth_event.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_state.dart';
 
 class ProfileScreen extends StatelessWidget {
   final bool isGuest;
@@ -233,18 +237,25 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildStatsRow() {
-    return ValueListenableBuilder<List<Map<String, dynamic>>>(
-      valueListenable: HistoryService.instance.historyList,
-      builder: (context, history, child) {
-        int shortenCount = history.length;
+    return BlocBuilder<HistoryBloc, HistoryState>(
+      builder: (context, state) {
+        int shortenCount = 0;
+        int scanCount = 0;
+        int qrCount = 0;
+
+        if (state is HistoryLoaded) {
+            shortenCount = state.history.where((i) => i.type == 'PENDEK').length;
+            scanCount = state.history.where((i) => i.type == 'SCAN').length;
+            qrCount = state.history.where((i) => i.type == 'QR').length;
+        }
 
         return Row(
           children: [
-            _buildStatCard("Scan", "24", const Color(0xFFCCFBF1), const Color(0xFF006D66), Icons.qr_code_scanner),
+            _buildStatCard("Scan", scanCount.toString(), const Color(0xFFCCFBF1), const Color(0xFF006D66), Icons.qr_code_scanner),
             const SizedBox(width: 12),
             _buildStatCard("Dipendekkan", shortenCount.toString(), const Color(0xFFF3E8FF), const Color(0xFFA855F7), Icons.link),
             const SizedBox(width: 12),
-            _buildStatCard("QR Dibuat", "12", const Color(0xFFE0F2FE), const Color(0xFF3B82F6), Icons.qr_code_2),
+            _buildStatCard("QR Dibuat", qrCount.toString(), const Color(0xFFE0F2FE), const Color(0xFF3B82F6), Icons.qr_code_2),
           ],
         );
       },
@@ -506,8 +517,9 @@ class ProfileScreen extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () {
-          // Logika logout, kembali ke Welcome Screen
-          Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
+          // Logika logout
+          context.read<AuthBloc>().add(LogoutRequested());
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         },
         icon: const Icon(Icons.logout, size: 20),
         label: Text(

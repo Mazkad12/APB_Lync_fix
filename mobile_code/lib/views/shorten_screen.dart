@@ -2,8 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/custom_bottom_nav.dart';
-import '../services/history_service.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/history_model.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_event.dart';
+import '../viewmodels/history/history_state.dart';
+import 'package:uuid/uuid.dart';
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
@@ -104,14 +108,18 @@ class _ShortenScreenState extends State<ShortenScreen> {
       currentShortUrl = "https://ly.nc/${_generateRandomCode()}";
       _showResult = true;
 
-      // Tambahkan ke riwayat global (HistoryService)
-      HistoryService.instance.addHistoryItem(
-        type: 'PENDEK',
-        title:
-            originalUrlInput, // Gunakan url asli sebagai judul untuk dropdown
+      // Tambahkan ke riwayat global
+      final newHistory = HistoryModel(
+        id: const Uuid().v4(),
+        userId: widget.isGuest ? null : widget.userEmail,
         originalUrl: originalUrlInput,
         shortUrl: currentShortUrl,
+        type: 'PENDEK',
+        title: originalUrlInput,
+        timestamp: DateTime.now(),
       );
+
+      context.read<HistoryBloc>().add(AddHistory(newHistory, userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
 
       _urlController.clear();
     });
@@ -609,137 +617,140 @@ class _ShortenScreenState extends State<ShortenScreen> {
 
   // WIDGET RIWAYAT
   Widget _buildHistorySection() {
-    return ValueListenableBuilder<List<Map<String, dynamic>>>(
-      valueListenable: HistoryService.instance.historyList,
-      builder: (context, history, child) {
-        if (history.isEmpty) {
-          return const SizedBox.shrink(); // Jangan tampilkan jika riwayat kosong
-        }
+    return BlocBuilder<HistoryBloc, HistoryState>(
+      builder: (context, state) {
+        if (state is HistoryLoaded) {
+          final history = state.history;
+          if (history.isEmpty) {
+            return const SizedBox.shrink(); // Jangan tampilkan jika riwayat kosong
+          }
 
-        // Ambil 3 riwayat terbaru untuk ditampilkan di ShortenScreen
-        final recentHistory = history.take(3).toList();
+          // Ambil 3 riwayat terbaru untuk ditampilkan di ShortenScreen
+          final recentHistory = history.take(3).toList();
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Riwayat Terakhir",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Riwayat Terakhir",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: widget.onViewAll,
+                    GestureDetector(
+                      onTap: widget.onViewAll,
+                      child: Row(
+                        children: const [
+                          Text(
+                            "Lihat Semua",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: primaryTosca,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...recentHistory.map((item) {
+                  // Tentukan warna icon berdasarkan tipe
+                  Color iconBgColor;
+                  Color iconColor;
+                  IconData iconData;
+
+                  if (item.type == 'SCAN') {
+                    iconBgColor = const Color(0xFFE0FDF4);
+                    iconColor = const Color(0xFF00C48C);
+                    iconData = Icons.qr_code_scanner;
+                  } else if (item.type == 'PENDEK') {
+                    iconBgColor = const Color(0xFFF3E8FF);
+                    iconColor = const Color(0xFFA855F7);
+                    iconData = Icons.link;
+                  } else {
+                    iconBgColor = const Color(0xFFE0F2FE);
+                    iconColor = const Color(0xFF3B82F6);
+                    iconData = Icons.qr_code_2;
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
                     child: Row(
-                      children: const [
-                        Text(
-                          "Lihat Semua",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: primaryTosca,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: iconBgColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(iconData, color: iconColor, size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                item.shortUrl ?? item.originalUrl,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              String copyText = item.shortUrl ?? item.originalUrl;
+                              Clipboard.setData(ClipboardData(text: copyText));
+                              _showTopSnackBar(context, "Tautan disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(Icons.copy, size: 18, color: Colors.grey),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ...recentHistory.map((item) {
-                // Tentukan warna icon berdasarkan tipe
-                Color iconBgColor;
-                Color iconColor;
-                IconData iconData;
-
-                if (item['type'] == 'SCAN') {
-                  iconBgColor = const Color(0xFFE0FDF4);
-                  iconColor = const Color(0xFF00C48C);
-                  iconData = Icons.qr_code_scanner;
-                } else if (item['type'] == 'PENDEK') {
-                  iconBgColor = const Color(0xFFF3E8FF);
-                  iconColor = const Color(0xFFA855F7);
-                  iconData = Icons.link;
-                } else {
-                  iconBgColor = const Color(0xFFE0F2FE);
-                  iconColor = const Color(0xFF3B82F6);
-                  iconData = Icons.qr_code_2;
-                }
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade100),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: iconBgColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(iconData, color: iconColor, size: 20),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['title'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              item['shortUrl'] ?? item['originalUrl'] ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            String copyText = item['shortUrl'] ?? item['originalUrl'] ?? '';
-                            Clipboard.setData(ClipboardData(text: copyText));
-                            _showTopSnackBar(context, "Tautan disalin!", Icons.check_circle_outline, const Color(0xFF00C48C));
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.all(4.0),
-                            child: Icon(Icons.copy, size: 18, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        );
+                  );
+                }).toList(),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
