@@ -3,14 +3,16 @@ import '../models/history_model.dart';
 import 'package:uuid/uuid.dart';
 
 class HistoryRepository {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _injectedFirestore;
   final _uuid = const Uuid();
 
   // Local volatile list for Guest users
   final List<HistoryModel> _guestHistory = [];
 
   HistoryRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _injectedFirestore = firestore;
+
+  FirebaseFirestore get _firestore => _injectedFirestore ?? FirebaseFirestore.instance;
 
   Future<void> addHistory(HistoryModel history, {bool isGuest = false}) async {
     if (isGuest || history.userId == null) {
