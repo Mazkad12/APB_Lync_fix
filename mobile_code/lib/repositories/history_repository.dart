@@ -36,15 +36,19 @@ class HistoryRepository {
       return Stream.value(_guestHistory);
     }
 
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('history')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => HistoryModel.fromMap(doc.data(), doc.id)).toList();
-    });
+    try {
+      return _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('history')
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) => HistoryModel.fromMap(doc.data(), doc.id)).toList();
+      });
+    } catch (e) {
+      return Stream.value([]);
+    }
   }
 
   Future<void> deleteHistory(String id, String? userId, {bool isGuest = false}) async {
