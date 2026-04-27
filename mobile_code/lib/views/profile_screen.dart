@@ -5,7 +5,7 @@ import '../viewmodels/auth/auth_event.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_state.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
 
@@ -15,18 +15,103 @@ class ProfileScreen extends StatelessWidget {
     required this.userEmail,
   });
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   static const Color primaryTosca = Color(0xFF006D66);
   static const Color bgColor = Color(0xFFF8FAFB);
 
+  late String _currentName;
+  late String _currentEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentEmail = widget.isGuest ? "Belum login" : widget.userEmail;
+    _currentName = widget.isGuest ? "Tamu" : (widget.userEmail.split('@').first);
+    if (_currentName.isNotEmpty && !widget.isGuest) {
+      _currentName = _currentName[0].toUpperCase() + _currentName.substring(1);
+    }
+  }
+
+  void _showEditProfileDialog() {
+    if (widget.isGuest) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login untuk mengedit profil.")),
+      );
+      return;
+    }
+
+    final nameController = TextEditingController(text: _currentName);
+    final emailController = TextEditingController(text: _currentEmail);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("Edit Profil", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: "Username",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: "Email",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.email_outlined),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _currentName = nameController.text.trim();
+                  _currentEmail = emailController.text.trim();
+                });
+                Navigator.pop(context);
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Profil berhasil diperbarui"),
+                    backgroundColor: Color(0xFF00C48C),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryTosca,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text("Simpan", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    String displayName = isGuest ? "Tamu" : (userEmail.split('@').first);
-    if (displayName.isNotEmpty) {
-      displayName = displayName[0].toUpperCase() + displayName.substring(1);
-    }
-    String displayEmail = isGuest ? "Belum login" : userEmail;
-    String joinedDate = isGuest ? "-" : "Bergabung sejak Januari 2024";
-    String initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : "?";
+    String joinedDate = widget.isGuest ? "-" : "Bergabung sejak Januari 2024";
+    String initial = _currentName.isNotEmpty ? _currentName[0].toUpperCase() : "?";
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -50,7 +135,7 @@ class ProfileScreen extends StatelessWidget {
               ),
 
               // Kartu Profil Utama
-              _buildProfileCard(initial, displayName, displayEmail, joinedDate),
+              _buildProfileCard(initial, _currentName, _currentEmail, joinedDate),
               const SizedBox(height: 20),
 
               // Baris Statistik
@@ -215,7 +300,7 @@ class ProfileScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _showEditProfileDialog,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF3F4F6),
                 foregroundColor: Colors.grey[800],
@@ -521,14 +606,14 @@ class ProfileScreen extends StatelessWidget {
           context.read<AuthBloc>().add(LogoutRequested());
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         },
-        icon: Icon(isGuest ? Icons.login : Icons.logout, size: 20),
+        icon: Icon(widget.isGuest ? Icons.login : Icons.logout, size: 20),
         label: Text(
-          isGuest ? "Login Sekarang" : "Keluar dari Akun",
+          widget.isGuest ? "Login Sekarang" : "Keluar dari Akun",
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isGuest ? primaryTosca : const Color(0xFFFEE2E2),
-          foregroundColor: isGuest ? Colors.white : const Color(0xFFEF4444),
+          backgroundColor: widget.isGuest ? primaryTosca : const Color(0xFFFEE2E2),
+          foregroundColor: widget.isGuest ? Colors.white : const Color(0xFFEF4444),
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
