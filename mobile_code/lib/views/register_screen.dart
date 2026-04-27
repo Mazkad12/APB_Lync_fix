@@ -27,11 +27,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const Color textBlack = Color(0xFF111827);
 
   void _handleRegister() {
-    if (_passwordController.text != _confirmController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua kolom harus diisi'), backgroundColor: Colors.red),
+      );
       return;
     }
-    context.read<AuthBloc>().add(RegisterRequested(_emailController.text, _passwordController.text, _nameController.text));
+
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format email tidak valid'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password minimal 6 karakter'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password dan konfirmasi password tidak cocok'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    context.read<AuthBloc>().add(RegisterRequested(email, password, name));
   }
 
   @override

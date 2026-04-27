@@ -24,10 +24,33 @@ class _LoginScreenState extends State<LoginScreen> {
   static const Color textBlack = Color(0xFF111827);
 
   void _handleLogin() {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua kolom harus diisi'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegExp.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format email tidak valid'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password minimal 6 karakter'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     context.read<AuthBloc>().add(
-      LoginRequested(_emailController.text.trim(), _passwordController.text),
+      LoginRequested(email, password),
     );
   }
 
