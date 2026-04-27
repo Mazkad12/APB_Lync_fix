@@ -68,10 +68,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Authenticated) {
-          Navigator.pushReplacementNamed(
+        if (state is RegistrationSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registrasi berhasil! Silakan login.'), backgroundColor: Colors.green),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+        } else if (state is Authenticated) {
+          Navigator.pushNamedAndRemoveUntil(
             context,
             '/main',
+            (route) => false,
             arguments: {'isGuest': false, 'userEmail': state.user.email ?? 'User'},
           );
         } else if (state is AuthError) {

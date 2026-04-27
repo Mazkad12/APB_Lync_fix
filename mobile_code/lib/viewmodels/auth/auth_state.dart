@@ -23,6 +23,8 @@ class Authenticated extends AuthState {
 
 class Unauthenticated extends AuthState {}
 
+class RegistrationSuccess extends AuthState {}
+
 class GuestMode extends AuthState {}
 
 class AuthError extends AuthState {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../viewmodels/auth/auth_bloc.dart';
 import '../viewmodels/auth/auth_event.dart';
+import '../viewmodels/history/history_bloc.dart';
+import '../viewmodels/history/history_event.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -68,11 +70,13 @@ class WelcomeScreen extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     // Trigger Guest Mode in BLoC
+                    context.read<HistoryBloc>().add(ClearGuestHistory());
                     context.read<AuthBloc>().add(GuestLoginRequested());
                     
-                    Navigator.pushReplacementNamed(
+                    Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/main',
+                      (route) => false,
                       arguments: {'isGuest': true, 'userEmail': 'Guest'},
                     );
                   },

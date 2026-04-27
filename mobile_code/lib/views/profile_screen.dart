@@ -521,14 +521,14 @@ class ProfileScreen extends StatelessWidget {
           context.read<AuthBloc>().add(LogoutRequested());
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         },
-        icon: const Icon(Icons.logout, size: 20),
+        icon: Icon(isGuest ? Icons.login : Icons.logout, size: 20),
         label: Text(
           isGuest ? "Login Sekarang" : "Keluar dari Akun",
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFEE2E2), // Merah muda
-          foregroundColor: const Color(0xFFEF4444), // Merah
+          backgroundColor: isGuest ? primaryTosca : const Color(0xFFFEE2E2),
+          foregroundColor: isGuest ? Colors.white : const Color(0xFFEF4444),
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(

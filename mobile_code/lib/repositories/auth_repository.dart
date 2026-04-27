@@ -22,6 +22,8 @@ class AuthRepository {
         email: email,
         password: password,
       );
+      // Sign out immediately to prevent auto-login
+      await _firebaseAuth.signOut();
       return credential.user;
     } catch (e) {
       throw Exception(_handleAuthError(e));

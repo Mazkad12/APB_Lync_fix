@@ -54,7 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: event.email, password: event.password);
       if (user != null) {
         // Here you might want to save the user's name to Firestore
-        emit(Authenticated(user));
+        emit(RegistrationSuccess());
       } else {
         emit(const AuthError("Registration failed"));
       }

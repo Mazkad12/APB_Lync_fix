@@ -14,6 +14,10 @@ class HistoryRepository {
 
   FirebaseFirestore get _firestore => _injectedFirestore ?? FirebaseFirestore.instance;
 
+  void clearGuestHistory() {
+    _guestHistory.clear();
+  }
+
   Future<void> addHistory(HistoryModel history, {bool isGuest = false}) async {
     if (isGuest || history.userId == null) {
       _guestHistory.insert(0, history);

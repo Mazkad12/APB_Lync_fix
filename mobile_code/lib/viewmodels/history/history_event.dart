@@ -51,3 +51,5 @@ class UpdateHistoryTitle extends HistoryEvent {
   @override
   List<Object?> get props => [id, newTitle, userId, isGuest];
 }
+
+class ClearGuestHistory extends HistoryEvent {}

@@ -59,9 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          Navigator.pushReplacementNamed(
+          Navigator.pushNamedAndRemoveUntil(
             context,
             '/main',
+            (route) => false,
             arguments: {'isGuest': false, 'userEmail': state.user.email ?? 'User'},
           );
         } else if (state is AuthError) {

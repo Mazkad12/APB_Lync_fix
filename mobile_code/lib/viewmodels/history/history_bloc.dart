@@ -13,6 +13,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<AddHistory>(_onAddHistory);
     on<DeleteHistory>(_onDeleteHistory);
     on<UpdateHistoryTitle>(_onUpdateHistoryTitle);
+    on<ClearGuestHistory>(_onClearGuestHistory);
   }
 
   Future<void> _onLoadHistory(LoadHistory event, Emitter<HistoryState> emit) async {
@@ -45,6 +46,13 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       await historyRepository.updateHistoryTitle(event.id, event.userId, event.newTitle, isGuest: event.isGuest);
     } catch (e) {
       // Ignore or log error
+    }
+  }
+
+  void _onClearGuestHistory(ClearGuestHistory event, Emitter<HistoryState> emit) {
+    historyRepository.clearGuestHistory();
+    if (state is HistoryLoaded) {
+      emit(const HistoryLoaded([]));
     }
   }
 }

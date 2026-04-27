@@ -88,14 +88,25 @@ class _MainScreenState extends State<MainScreen> {
        context.read<HistoryBloc>().add(LoadHistory(userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
     });
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentIndex != 1) {
+          setState(() {
+            _currentIndex = 1;
+          });
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: CustomBottomNavBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+        ),
       ),
     );
   }
