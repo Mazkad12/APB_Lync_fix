@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:ui' as ui;
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
@@ -59,14 +59,12 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
       File imgFile = File('$directory/lync_qr_${DateTime.now().millisecondsSinceEpoch}.png');
       await imgFile.writeAsBytes(pngBytes);
 
-      final success = await GallerySaver.saveImage(imgFile.path, albumName: 'Lync');
+      await Gal.putImageBytes(pngBytes, name: "lync_qr_${DateTime.now().millisecondsSinceEpoch}");
       
-      if(success != null && success) {
-         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('QR Code disimpan ke Galeri!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
-            );
-         }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR Code disimpan ke Galeri!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+        );
       }
     } catch (e) {
       if (mounted) {

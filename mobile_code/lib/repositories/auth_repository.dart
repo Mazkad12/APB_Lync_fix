@@ -54,15 +54,15 @@ class AuthRepository {
     if (e is FirebaseAuthException) {
       switch (e.code) {
         case 'user-not-found':
-          return 'No user found for that email.';
+          return 'Akun tidak ditemukan.';
         case 'wrong-password':
-          return 'Wrong password provided for that user.';
+          return 'Password salah.';
         case 'email-already-in-use':
-          return 'The account already exists for that email.';
+          return 'Email sudah terdaftar.';
         case 'weak-password':
-          return 'The password provided is too weak.';
+          return 'Password terlalu lemah.';
         default:
-          return e.message ?? 'An unknown error occurred.';
+          return e.message ?? 'Terjadi kesalahan autentikasi.';
       }
     }
     return e.toString();
