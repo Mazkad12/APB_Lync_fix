@@ -104,20 +104,25 @@ class _ShortenScreenState extends State<ShortenScreen> {
 
   // Fungsi saat tombol diklik
   Future<void> _handleShortenAction() async {
-    // Simpan input asli sebelum dibersihkan
     final String originalUrl = _urlController.text.trim();
 
-    if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
-      _showTopSnackBar(context, "URL harus menggunakan http:// atau https://", Icons.error_outline, Colors.red);
+    // Validasi HTTPS
+    if (!originalUrl.toLowerCase().startsWith('https://') && !originalUrl.toLowerCase().startsWith('http://')) {
+      _showTopSnackBar(context, "URL harus diawali dengan http:// atau https://", Icons.error_outline, Colors.red);
+      return;
+    }
+
+    // Validasi URL Valid
+    final Uri? uri = Uri.tryParse(originalUrl);
+    if (uri == null || !uri.hasAbsolutePath || uri.host.isEmpty) {
+      _showTopSnackBar(context, "Format URL tidak valid. Periksa kembali tautan Anda.", Icons.error_outline, Colors.red);
       return;
     }
 
     final code = _generateRandomCode();
     
-    // Menggunakan Firebase Local Emulator
-    // CATATAN: Karena Anda menjalankan aplikasi langsung dari komputer (tanpa Android Emulator), 
-    // kita menggunakan IP localhost standar yaitu 127.0.0.1
-    final baseUrl = "http://127.0.0.1:5001/lync-7cd15/asia-southeast2/redirect";
+    // Tampilan URL Pendek di UI
+    final baseUrl = "https://lync.co";
     
     setState(() {
       originalUrlInput = originalUrl;
