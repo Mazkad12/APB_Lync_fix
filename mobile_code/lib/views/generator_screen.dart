@@ -55,12 +55,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
           await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-      final directory = (await getApplicationDocumentsDirectory()).path;
-      File imgFile = File('$directory/lync_qr_${DateTime.now().millisecondsSinceEpoch}.png');
-      await imgFile.writeAsBytes(pngBytes);
-
-      await Gal.putImageBytes(pngBytes, name: "lync_qr_${DateTime.now().millisecondsSinceEpoch}");
-      
+      await Gal.putImageBytes(pngBytes, album: 'Lync', name: 'lync_qr_${DateTime.now().millisecondsSinceEpoch}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('QR Code disimpan ke Galeri!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
@@ -68,9 +63,9 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
       }
     } catch (e) {
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Gagal menyimpan QR: $e'), backgroundColor: Colors.red),
-            );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan QR: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
