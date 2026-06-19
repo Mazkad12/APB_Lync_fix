@@ -35,12 +35,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
               final history = state.history;
               int scanCount = history.where((i) => i.type == 'SCAN').length;
               int pendekCount = history.where((i) => i.type == 'PENDEK').length;
+              int qrCount = history.where((i) => i.type == 'QR').length;
 
               List<HistoryModel> filteredHistory = history;
               if (activeFilter.startsWith('Scan')) {
                 filteredHistory = history.where((i) => i.type == 'SCAN').toList();
               } else if (activeFilter.startsWith('Dipendekkan')) {
                 filteredHistory = history.where((i) => i.type == 'PENDEK').toList();
+              } else if (activeFilter.startsWith('QR')) {
+                filteredHistory = history.where((i) => i.type == 'QR').toList();
               }
 
               return Column(
@@ -79,6 +82,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         _buildFilterChip('Scan ($scanCount)', Icons.qr_code_scanner, activeFilter.startsWith('Scan')),
                         const SizedBox(width: 12),
                         _buildFilterChip('Dipendekkan ($pendekCount)', Icons.link, activeFilter.startsWith('Dipendekkan')),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('QR ($qrCount)', Icons.qr_code_2, activeFilter.startsWith('QR')),
                       ],
                     ),
                   ),
