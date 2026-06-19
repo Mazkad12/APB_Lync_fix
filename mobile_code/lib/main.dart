@@ -17,8 +17,7 @@ import 'views/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase with the generated options
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -31,7 +30,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inject Repositories and BLoCs
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(create: (_) => AuthRepository()),

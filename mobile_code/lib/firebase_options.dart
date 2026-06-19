@@ -6,8 +6,7 @@ class DefaultFirebaseOptions {
     if (kIsWeb) {
       return web;
     }
-    // Karena kita baru mengkonfigurasi untuk Web, kita akan menggunakan config web
-    // sebagai fallback sementara untuk testing di platform lain.
+    
     return web; 
   }
 

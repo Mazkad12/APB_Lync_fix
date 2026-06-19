@@ -647,6 +647,9 @@ class _ShortenScreenState extends State<ShortenScreen> {
 
   // WIDGET RIWAYAT
   Widget _buildHistorySection() {
+    if (widget.isGuest) {
+      return const SizedBox.shrink();
+    }
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, state) {
         if (state is HistoryLoaded) {

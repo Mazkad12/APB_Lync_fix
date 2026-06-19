@@ -328,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         int scanCount = 0;
         int qrCount = 0;
 
-        if (state is HistoryLoaded) {
+        if (!widget.isGuest && state is HistoryLoaded) {
             shortenCount = state.history.where((i) => i.type == 'PENDEK').length;
             scanCount = state.history.where((i) => i.type == 'SCAN').length;
             qrCount = state.history.where((i) => i.type == 'QR').length;
