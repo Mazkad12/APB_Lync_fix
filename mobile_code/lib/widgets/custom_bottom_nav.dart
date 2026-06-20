@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../viewmodels/history/history_bloc.dart';
-import '../viewmodels/history/history_state.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -33,17 +30,17 @@ class CustomBottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _buildNavItem(0, Icons.qr_code_scanner_rounded, "Scan", false),
-          _buildNavItem(1, Icons.link_rounded, "Shorten", false),
+          _buildNavItem(0, Icons.link_rounded, "Shorten"),
+          _buildNavItem(1, Icons.qr_code_2, "Generate"),
           _buildCenterItem(),
-          _buildNavItem(3, Icons.history_rounded, "History", true),
-          _buildNavItem(4, Icons.person_outline_rounded, "Profile", false),
+          _buildNavItem(3, Icons.history_rounded, "History"),
+          _buildNavItem(4, Icons.person_outline_rounded, "Profile"),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, bool isHistoryTab) {
+  Widget _buildNavItem(int index, IconData icon, String label) {
     bool isActive = currentIndex == index;
     return Expanded(
       child: InkWell(
@@ -54,51 +51,11 @@ class CustomBottomNavBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              if (isHistoryTab)
-                BlocBuilder<HistoryBloc, HistoryState>(
-                  builder: (context, state) {
-                    int count = 0;
-                    if (state is HistoryLoaded) {
-                      count = state.history.length;
-                    }
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Icon(
-                          icon,
-                          color: isActive ? primaryTosca : Colors.grey[400],
-                          size: 24,
-                        ),
-                        if (count > 0)
-                          Positioned(
-                            top: -4,
-                            right: -8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: primaryTosca,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                count > 99 ? "99+" : count.toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                )
-              else
-                Icon(
-                  icon,
-                  color: isActive ? primaryTosca : Colors.grey[400],
-                  size: 24,
-                ),
+              Icon(
+                icon,
+                color: isActive ? primaryTosca : Colors.grey[400],
+                size: 24,
+              ),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -154,7 +111,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     ],
                   ),
                   child: const Icon(
-                    Icons.qr_code_2,
+                    Icons.qr_code_scanner_rounded,
                     color: Colors.white,
                     size: 28,
                   ),
@@ -163,7 +120,7 @@ class CustomBottomNavBar extends StatelessWidget {
               Transform.translate(
                 offset: const Offset(0, -8),
                 child: Text(
-                  "Generate",
+                  "Scan",
                   style: TextStyle(
                     fontSize: 11,
                     color: isActive ? primaryTosca : Colors.grey[800],

@@ -24,21 +24,34 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 1; // Default ke tab Shorten
+  int _currentIndex = 0; // Default ke tab Shorten
 
   late final List<Widget> _pages;
+
+  void _onGenerateQR(String url) {
+    setState(() {
+      _pages[1] = GeneratorScreen(
+        key: UniqueKey(),
+        isGuest: widget.isGuest,
+        userEmail: widget.userEmail,
+        initialQrData: url,
+      );
+      _currentIndex = 1;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      ScannerScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       ShortenScreen(
         isGuest: widget.isGuest,
         userEmail: widget.userEmail,
         onViewAll: () => _onTabTapped(3),
+        onGenerateQR: _onGenerateQR,
       ),
       GeneratorScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
+      ScannerScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       HistoryScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
     ];
@@ -90,9 +103,9 @@ class _MainScreenState extends State<MainScreen> {
 
     return WillPopScope(
       onWillPop: () async {
-        if (_currentIndex != 1) {
+        if (_currentIndex != 0) {
           setState(() {
-            _currentIndex = 1;
+            _currentIndex = 0;
           });
           return false;
         }

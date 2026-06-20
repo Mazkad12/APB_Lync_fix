@@ -5,6 +5,7 @@ import '../models/history_model.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
 import '../viewmodels/history/history_state.dart';
+import '../repositories/history_repository.dart';
 
 class HistoryScreen extends StatefulWidget {
   final bool isGuest;
@@ -51,25 +52,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Riwayat",
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFFE0F2F1), borderRadius: BorderRadius.circular(20)),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.history, size: 14, color: primaryTosca),
-                              const SizedBox(width: 4),
-                              Text("${history.length} item", style: const TextStyle(color: primaryTosca, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: const Text(
+                      "Riwayat",
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
                     ),
                   ),
                   SingleChildScrollView(
@@ -77,7 +62,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Row(
                       children: [
-                        _buildFilterChip('Semua', Icons.access_time_filled, activeFilter == 'Semua'),
+                        _buildFilterChip('Semua (${history.length})', Icons.access_time_filled, activeFilter.startsWith('Semua')),
                         const SizedBox(width: 12),
                         _buildFilterChip('Scan ($scanCount)', Icons.qr_code_scanner, activeFilter.startsWith('Scan')),
                         const SizedBox(width: 12),
@@ -227,7 +212,7 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
   }
 
   void _showEditLabelModal(BuildContext context, String currentTitle, String originalUrl) {
-    final TextEditingController _titleController = TextEditingController(text: currentTitle);
+    final TextEditingController titleController = TextEditingController(text: currentTitle);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -248,10 +233,10 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
             ),
             const SizedBox(height: 24),
             TextFormField(
-              controller: _titleController,
+              controller: titleController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.edit, color: Color(0xFF006D66), size: 20),
-                suffixIcon: GestureDetector(onTap: () => _titleController.clear(), child: const Icon(Icons.close, color: Colors.grey, size: 18)),
+                suffixIcon: GestureDetector(onTap: () => titleController.clear(), child: const Icon(Icons.close, color: Colors.grey, size: 18)),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF006D66), width: 1.5)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF006D66), width: 2)),
               ),
@@ -274,9 +259,31 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
+                      final newTitle = titleController.text.trim();
+                      if (newTitle.isEmpty) {
+                        _showTopSnackBar(context, "Label tidak boleh kosong", Icons.error_outline, Colors.red);
+                        return;
+                      }
+
+                      if (newTitle == currentTitle) {
+                        Navigator.pop(context);
+                        return;
+                      }
+
                       if (widget.data.id.isNotEmpty) {
-                        context.read<HistoryBloc>().add(UpdateHistoryTitle(widget.data.id, _titleController.text, userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
-                        _showTopSnackBar(context, "Label berhasil disimpan!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                        try {
+                          final historyRepo = RepositoryProvider.of<HistoryRepository>(context);
+                          historyRepo.updateHistoryTitle(
+                            widget.data.id,
+                            widget.isGuest ? null : widget.userEmail,
+                            newTitle,
+                            isGuest: widget.isGuest,
+                          );
+
+                          _showTopSnackBar(context, "Label berhasil disimpan!", Icons.check_circle_outline, const Color(0xFF00C48C));
+                        } catch (e) {
+                          _showTopSnackBar(context, "Gagal menyimpan label: $e", Icons.error_outline, Colors.red);
+                        }
                       }
                       Navigator.pop(context);
                     },

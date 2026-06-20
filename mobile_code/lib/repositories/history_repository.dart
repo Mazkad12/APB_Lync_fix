@@ -57,18 +57,13 @@ class HistoryRepository {
           .orderBy('timestamp', descending: true)
           .snapshots()
           .map((snapshot) {
-            if (snapshot.docs.isNotEmpty) {
-              final firestoreData = snapshot.docs.map((doc) => HistoryModel.fromMap(doc.data(), doc.id)).toList();
-              // Sync local with firestore
-              for (var item in firestoreData) {
-                if (!_demoHistory.any((l) => l.id == item.id)) {
-                  _demoHistory.add(item);
-                }
-              }
-              _demoHistory.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-              return _demoHistory;
-            }
-            return _demoHistory;
+            final firestoreData = snapshot.docs.map((doc) => HistoryModel.fromMap(doc.data(), doc.id)).toList();
+            
+            // Sinkronisasi list cache lokal agar sinkron dengan Firestore
+            _demoHistory.clear();
+            _demoHistory.addAll(firestoreData);
+            
+            return firestoreData;
           }).handleError((e) => _demoHistory);
     } catch (e) {
       return _historyController.stream;

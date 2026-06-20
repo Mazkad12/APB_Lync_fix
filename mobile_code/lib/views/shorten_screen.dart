@@ -9,16 +9,20 @@ import '../viewmodels/history/history_event.dart';
 import '../viewmodels/history/history_state.dart';
 import 'package:uuid/uuid.dart';
 import '../repositories/link_repository.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 class ShortenScreen extends StatefulWidget {
   final bool isGuest;
   final String userEmail;
   final VoidCallback? onViewAll;
+  final Function(String)? onGenerateQR;
 
   const ShortenScreen({
     super.key,
     required this.isGuest,
     required this.userEmail,
     this.onViewAll,
+    this.onGenerateQR,
   });
 
   @override
@@ -239,7 +243,7 @@ class _ShortenScreenState extends State<ShortenScreen> {
                     // 4. Banner Mode Tamu (Jika Guest)
                     if (widget.isGuest) _buildGuestBanner(),
                     
-                    const SizedBox(height: 100), // Spasi bawah agar tidak mentok navbar
+                    const SizedBox(height: 16), // Spasi bawah secukupnya
                   ],
                 ),
               ),
@@ -504,8 +508,21 @@ class _ShortenScreenState extends State<ShortenScreen> {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
-                        onTap: () {
-                          // Logika buka link (Opsional)
+                        onTap: () async {
+                          final Uri url = Uri.parse(currentShortUrl);
+                          try {
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url, mode: LaunchMode.externalApplication);
+                            } else {
+                              if (mounted) {
+                                _showTopSnackBar(context, "Tidak dapat membuka URL.", Icons.error_outline, Colors.red);
+                              }
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              _showTopSnackBar(context, "Terjadi kesalahan: $e", Icons.error_outline, Colors.red);
+                            }
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -526,80 +543,17 @@ class _ShortenScreenState extends State<ShortenScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "KLIK",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "0",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "DIBUAT",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "Baru saja",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (widget.onGenerateQR != null && currentShortUrl.isNotEmpty) {
+                      widget.onGenerateQR!(currentShortUrl);
+                    }
+                  },
                   icon: const Icon(Icons.qr_code, size: 16),
                   label: const Text(
                     "Buat QR",

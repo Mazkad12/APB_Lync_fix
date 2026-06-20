@@ -15,8 +15,14 @@ import 'package:uuid/uuid.dart';
 class GeneratorScreen extends StatefulWidget {
   final bool isGuest;
   final String? userEmail;
+  final String? initialQrData;
 
-  const GeneratorScreen({super.key, required this.isGuest, this.userEmail});
+  const GeneratorScreen({
+    super.key,
+    required this.isGuest,
+    this.userEmail,
+    this.initialQrData,
+  });
 
   @override
   State<GeneratorScreen> createState() => _GeneratorScreenState();
@@ -27,6 +33,29 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
   final GlobalKey _globalKey = GlobalKey();
   static const Color primaryTosca = Color(0xFF006D66);
   String qrData = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQrData != null && widget.initialQrData!.isNotEmpty) {
+      _textController.text = widget.initialQrData!;
+      qrData = widget.initialQrData!;
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final newHistory = HistoryModel(
+          id: const Uuid().v4(),
+          userId: widget.isGuest ? null : widget.userEmail,
+          originalUrl: qrData,
+          type: 'QR',
+          title: 'Generated QR Code',
+          timestamp: DateTime.now(),
+        );
+        context.read<HistoryBloc>().add(
+          AddHistory(newHistory, userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest),
+        );
+      });
+    }
+  }
 
   void _generateQR() {
     setState(() {
