@@ -50,13 +50,22 @@ class AuthRepository {
     }
   }
 
+  Future<void> sendPasswordReset({required String email}) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      throw Exception(_handleAuthError(e));
+    }
+  }
+
   String _handleAuthError(dynamic e) {
     if (e is FirebaseAuthException) {
       switch (e.code) {
         case 'user-not-found':
           return 'Akun tidak ditemukan.';
         case 'wrong-password':
-          return 'Password salah.';
+        case 'invalid-credential':
+          return 'Email atau password salah.';
         case 'email-already-in-use':
           return 'Email sudah terdaftar.';
         case 'weak-password':

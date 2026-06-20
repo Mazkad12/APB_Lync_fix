@@ -12,6 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
     on<GuestLoginRequested>(_onGuestLoginRequested);
+    on<ForgotPasswordRequested>(_onForgotPasswordRequested);
   }
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AuthState> emit) async {
@@ -42,7 +43,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthError("Login failed"));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(_getCleanErrorMessage(e)));
     }
   }
 
@@ -59,7 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthError("Registration failed"));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(_getCleanErrorMessage(e)));
     }
   }
 
@@ -70,12 +71,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await authRepository.signOut();
       emit(Unauthenticated());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(_getCleanErrorMessage(e)));
     }
   }
 
   void _onGuestLoginRequested(
       GuestLoginRequested event, Emitter<AuthState> emit) {
     emit(GuestMode());
+  }
+
+  Future<void> _onForgotPasswordRequested(
+      ForgotPasswordRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      await authRepository.sendPasswordReset(email: event.email);
+      emit(ForgotPasswordSuccess());
+    } catch (e) {
+      emit(AuthError(_getCleanErrorMessage(e)));
+    }
+  }
+
+  String _getCleanErrorMessage(dynamic e) {
+    return e.toString().replaceFirst('Exception: ', '');
   }
 }
