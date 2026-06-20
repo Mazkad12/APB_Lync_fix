@@ -35,6 +35,7 @@ class _MainScreenState extends State<MainScreen> {
         isGuest: widget.isGuest,
         userEmail: widget.userEmail,
         initialQrData: url,
+        onViewAll: () => _onTabTapped(3),
       );
       _currentIndex = 1;
     });
@@ -50,7 +51,11 @@ class _MainScreenState extends State<MainScreen> {
         onViewAll: () => _onTabTapped(3),
         onGenerateQR: _onGenerateQR,
       ),
-      GeneratorScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
+      GeneratorScreen(
+        isGuest: widget.isGuest, 
+        userEmail: widget.userEmail,
+        onViewAll: () => _onTabTapped(3),
+      ),
       ScannerScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       HistoryScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
       ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),

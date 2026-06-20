@@ -607,13 +607,13 @@ class _ShortenScreenState extends State<ShortenScreen> {
     return BlocBuilder<HistoryBloc, HistoryState>(
       builder: (context, state) {
         if (state is HistoryLoaded) {
-          final history = state.history;
-          if (history.isEmpty) {
+          final shortenHistory = state.history.where((i) => i.type == 'PENDEK').toList();
+          if (shortenHistory.isEmpty) {
             return const SizedBox.shrink(); // Jangan tampilkan jika riwayat kosong
           }
 
           // Ambil 3 riwayat terbaru untuk ditampilkan di ShortenScreen
-          final recentHistory = history.take(3).toList();
+          final recentHistory = shortenHistory.take(3).toList();
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),

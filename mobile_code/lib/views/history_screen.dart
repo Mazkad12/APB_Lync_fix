@@ -20,6 +20,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   static const Color primaryTosca = Color(0xFF006D66);
   String activeFilter = 'Semua';
+  String sortOrder = 'Terbaru';
 
   @override
   Widget build(BuildContext context) {
@@ -47,14 +48,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 filteredHistory = history.where((i) => i.type == 'QR').toList();
               }
 
+              if (sortOrder == 'Terlama') {
+                filteredHistory.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+              } else {
+                filteredHistory.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+              }
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
-                    child: const Text(
-                      "Riwayat",
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Riwayat",
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)),
+                        ),
+                        DropdownButton<String>(
+                          value: sortOrder,
+                          icon: const Icon(Icons.sort),
+                          underline: const SizedBox(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                sortOrder = newValue;
+                              });
+                            }
+                          },
+                          items: <String>['Terbaru', 'Terlama']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value, style: const TextStyle(fontSize: 14)),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
                   ),
                   SingleChildScrollView(

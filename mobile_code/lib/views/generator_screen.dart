@@ -10,18 +10,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
 import '../models/history_model.dart';
+import '../viewmodels/history/history_state.dart';
 import 'package:uuid/uuid.dart';
 
 class GeneratorScreen extends StatefulWidget {
   final bool isGuest;
   final String? userEmail;
   final String? initialQrData;
+  final VoidCallback? onViewAll;
 
   const GeneratorScreen({
     super.key,
     required this.isGuest,
     this.userEmail,
     this.initialQrData,
+    this.onViewAll,
   });
 
   @override
@@ -212,13 +215,145 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                           ),
                         ),
                       ),
-                   ],
-                 )
-               )
-            ]
+                    ]
+                  )
+                )
+             ],
+             const SizedBox(height: 32),
+             _buildHistorySection(),
+             const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  // WIDGET RIWAYAT
+  Widget _buildHistorySection() {
+    if (widget.isGuest) {
+      return const SizedBox.shrink();
+    }
+    return BlocBuilder<HistoryBloc, HistoryState>(
+      builder: (context, state) {
+        if (state is HistoryLoaded) {
+          final qrHistory = state.history.where((i) => i.type == 'QR').toList();
+          if (qrHistory.isEmpty) {
+            return const SizedBox.shrink(); 
+          }
+
+          final recentHistory = qrHistory.take(3).toList();
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Riwayat Terakhir",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: widget.onViewAll,
+                      child: Row(
+                        children: const [
+                          Text(
+                            "Lihat Semua",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: primaryTosca,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward, size: 14, color: primaryTosca),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...recentHistory.map((item) {
+                  Color iconBgColor = const Color(0xFFE0F2FE);
+                  Color iconColor = const Color(0xFF3B82F6);
+                  IconData iconData = Icons.qr_code_2;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: iconBgColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(iconData, color: iconColor, size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                item.shortUrl ?? item.originalUrl,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              String copyText = item.shortUrl ?? item.originalUrl;
+                              Clipboard.setData(ClipboardData(text: copyText));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Tautan disalin!", style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+                              );
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(Icons.copy, size: 18, color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
