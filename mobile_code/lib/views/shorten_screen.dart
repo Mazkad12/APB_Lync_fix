@@ -126,7 +126,7 @@ class _ShortenScreenState extends State<ShortenScreen> {
     final code = _generateRandomCode();
     
     // Tampilan URL Pendek di UI
-    final baseUrl = "https://lync.co";
+    final baseUrl = "https://lync-qr.my.id";
     
     setState(() {
       originalUrlInput = originalUrl;
