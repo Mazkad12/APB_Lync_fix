@@ -511,16 +511,10 @@ class _ShortenScreenState extends State<ShortenScreen> {
                         onTap: () async {
                           final Uri url = Uri.parse(currentShortUrl);
                           try {
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url, mode: LaunchMode.externalApplication);
-                            } else {
-                              if (mounted) {
-                                _showTopSnackBar(context, "Tidak dapat membuka URL.", Icons.error_outline, Colors.red);
-                              }
-                            }
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
                           } catch (e) {
                             if (mounted) {
-                              _showTopSnackBar(context, "Terjadi kesalahan: $e", Icons.error_outline, Colors.red);
+                              _showTopSnackBar(context, "Tidak dapat membuka URL: $e", Icons.error_outline, Colors.red);
                             }
                           }
                         },

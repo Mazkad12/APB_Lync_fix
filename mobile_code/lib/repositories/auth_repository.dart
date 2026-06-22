@@ -8,6 +8,8 @@ class AuthRepository {
 
   FirebaseAuth get _firebaseAuth => _injectedAuth ?? FirebaseAuth.instance;
 
+  User? get currentUser => _firebaseAuth.currentUser;
+
   Stream<User?> get user {
     try {
       return _firebaseAuth.authStateChanges();
@@ -16,12 +18,16 @@ class AuthRepository {
     }
   }
 
-  Future<User?> signUp({required String email, required String password}) async {
+  Future<User?> signUp({required String email, required String password, String? name}) async {
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      final user = credential.user;
+      if (user != null && name != null) {
+        await user.updateDisplayName(name);
+      }
       // Sign out immediately to prevent auto-login
       await _firebaseAuth.signOut();
       return credential.user;
@@ -70,6 +76,8 @@ class AuthRepository {
           return 'Email sudah terdaftar.';
         case 'weak-password':
           return 'Password terlalu lemah.';
+        case 'requires-recent-login':
+          return 'Silakan login kembali sebelum mengubah email.';
         default:
           return e.message ?? 'Terjadi kesalahan autentikasi.';
       }

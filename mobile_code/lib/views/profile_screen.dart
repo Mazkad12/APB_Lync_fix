@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../viewmodels/auth/auth_bloc.dart';
 import '../viewmodels/auth/auth_event.dart';
+import '../viewmodels/auth/auth_state.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_state.dart';
 
@@ -25,14 +27,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   late String _currentName;
   late String _currentEmail;
+  String? _pendingEmailInput;
 
   @override
   void initState() {
     super.initState();
-    _currentEmail = widget.isGuest ? "Belum login" : widget.userEmail;
-    _currentName = widget.isGuest ? "Tamu" : (widget.userEmail.split('@').first);
+    final user = FirebaseAuth.instance.currentUser;
+    _currentEmail = widget.isGuest ? "Belum login" : (user?.email ?? widget.userEmail);
+    _currentName = widget.isGuest
+        ? "Tamu"
+        : (user?.displayName ?? widget.userEmail.split('@').first);
     if (_currentName.isNotEmpty && !widget.isGuest) {
       _currentName = _currentName[0].toUpperCase() + _currentName.substring(1);
+    }
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && !widget.isGuest) {
+      try {
+        await user.reload();
+        if (mounted) {
+          context.read<AuthBloc>().add(AppStarted());
+        }
+      } catch (e) {
+        print("Profile reload failed: $e");
+      }
     }
   }
 
@@ -83,18 +104,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  _currentName = nameController.text.trim();
-                  _currentEmail = emailController.text.trim();
-                });
-                Navigator.pop(context);
+                final newName = nameController.text.trim();
+                final newEmail = emailController.text.trim();
+                if (newName.isEmpty || newEmail.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Username dan Email tidak boleh kosong"), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
                 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Profil berhasil diperbarui"),
-                    backgroundColor: Color(0xFF00C48C),
-                  ),
+                setState(() {
+                  _pendingEmailInput = newEmail;
+                });
+
+                context.read<AuthBloc>().add(
+                  UpdateProfileRequested(email: newEmail, displayName: newName)
                 );
+                
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryTosca,
@@ -110,97 +137,144 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String joinedDate = widget.isGuest ? "-" : "Bergabung sejak Januari 2024";
     String initial = _currentName.isNotEmpty ? _currentName[0].toUpperCase() : "?";
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              const Padding(
-                padding: EdgeInsets.only(bottom: 24, top: 8),
-                child: Text(
-                  "Profil",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1F2937),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          final isEmailPending = _pendingEmailInput != null && _pendingEmailInput != state.user.email;
+          setState(() {
+            _currentEmail = state.user.email ?? widget.userEmail;
+            _currentName = state.user.displayName ?? (state.user.email?.split('@').first ?? 'User');
+            if (_currentName.isNotEmpty) {
+              _currentName = _currentName[0].toUpperCase() + _currentName.substring(1);
+            }
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isEmailPending
+                  ? "Link verifikasi dikirim ke $_pendingEmailInput. Silakan verifikasi email baru Anda."
+                  : "Profil berhasil diperbarui"),
+              backgroundColor: const Color(0xFF00C48C),
+            ),
+          );
+          _pendingEmailInput = null;
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: bgColor,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 24, top: 8),
+                        child: Text(
+                          "Profil",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1F2937),
+                          ),
+                        ),
+                      ),
+
+                      // Kartu Profil Utama
+                      _buildProfileCard(initial, _currentName, _currentEmail),
+                      const SizedBox(height: 20),
+
+                      // Baris Statistik
+                      _buildStatsRow(),
+                      const SizedBox(height: 20),
+
+                      // Cloud Sync Card
+                      _buildCloudSyncCard(),
+                      const SizedBox(height: 24),
+
+                      // Pengaturan Section
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8, bottom: 12),
+                        child: Text(
+                          "PENGATURAN",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      _buildSettingsMenu(),
+                      const SizedBox(height: 24),
+
+                      // Lainnya Section
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8, bottom: 12),
+                        child: Text(
+                          "LAINNYA",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      _buildOthersMenu(),
+                      const SizedBox(height: 32),
+
+                      // Tombol Keluar
+                      _buildLogoutButton(context),
+                      const SizedBox(height: 32),
+
+                      // Footer
+                      Center(
+                        child: Text(
+                          "Lync v2.4.1 · Made with ♥",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
-
-              // Kartu Profil Utama
-              _buildProfileCard(initial, _currentName, _currentEmail, joinedDate),
-              const SizedBox(height: 20),
-
-              // Baris Statistik
-              _buildStatsRow(),
-              const SizedBox(height: 20),
-
-              // Cloud Sync Card
-              _buildCloudSyncCard(),
-              const SizedBox(height: 24),
-
-              // Pengaturan Section
-              const Padding(
-                padding: EdgeInsets.only(left: 8, bottom: 12),
-                child: Text(
-                  "PENGATURAN",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
+            ),
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.35),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(primaryTosca),
                   ),
                 ),
               ),
-              _buildSettingsMenu(),
-              const SizedBox(height: 24),
-
-              // Lainnya Section
-              const Padding(
-                padding: EdgeInsets.only(left: 8, bottom: 12),
-                child: Text(
-                  "LAINNYA",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              _buildOthersMenu(),
-              const SizedBox(height: 32),
-
-              // Tombol Keluar
-              _buildLogoutButton(context),
-              const SizedBox(height: 32),
-
-              // Footer
-              Center(
-                child: Text(
-                  "Lync v2.4.1 · Made with ♥",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildProfileCard(String initial, String name, String email, String joined) {
+  Widget _buildProfileCard(String initial, String name, String email) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -277,17 +351,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 4),
                     Text(
                       email,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      joined,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[400],
+                        color: Color(0xFF1F2937),
                       ),
                     ),
                   ],

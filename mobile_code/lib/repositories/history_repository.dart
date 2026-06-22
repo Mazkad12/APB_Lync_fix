@@ -95,5 +95,23 @@ class HistoryRepository {
     } catch(e) {}
   }
 
+  Future<void> migrateHistory(String oldEmail, String newEmail) async {
+    try {
+      final oldRef = _firestore.collection('users').doc(oldEmail).collection('history');
+      final newRef = _firestore.collection('users').doc(newEmail).collection('history');
+      
+      final snapshot = await oldRef.get();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        data['userId'] = newEmail;
+        await newRef.doc(doc.id).set(data);
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print("Migration Error: $e");
+      rethrow;
+    }
+  }
+
   String generateId() => _uuid.v4();
 }

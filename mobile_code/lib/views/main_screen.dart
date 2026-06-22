@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
+import '../viewmodels/auth/auth_bloc.dart';
+import '../viewmodels/auth/auth_state.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'shorten_screen.dart';
 import 'history_screen.dart';
@@ -25,18 +27,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0; // Default ke tab Shorten
-
-  late final List<Widget> _pages;
+  String? _qrUrl;
 
   void _onGenerateQR(String url) {
     setState(() {
-      _pages[1] = GeneratorScreen(
-        key: UniqueKey(),
-        isGuest: widget.isGuest,
-        userEmail: widget.userEmail,
-        initialQrData: url,
-        onViewAll: () => _onTabTapped(3),
-      );
+      _qrUrl = url;
       _currentIndex = 1;
     });
   }
@@ -44,22 +39,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _pages = [
-      ShortenScreen(
-        isGuest: widget.isGuest,
-        userEmail: widget.userEmail,
-        onViewAll: () => _onTabTapped(3),
-        onGenerateQR: _onGenerateQR,
-      ),
-      GeneratorScreen(
-        isGuest: widget.isGuest, 
-        userEmail: widget.userEmail,
-        onViewAll: () => _onTabTapped(3),
-      ),
-      ScannerScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
-      HistoryScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
-      ProfileScreen(isGuest: widget.isGuest, userEmail: widget.userEmail),
-    ];
   }
 
   void _onTabTapped(int index) {
@@ -101,31 +80,62 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Memuat history saat layar utama dipanggil
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-       context.read<HistoryBloc>().add(LoadHistory(userId: widget.isGuest ? null : widget.userEmail, isGuest: widget.isGuest));
-    });
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final currentEmail = (authState is Authenticated) ? (authState.user.email ?? widget.userEmail) : widget.userEmail;
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (_currentIndex != 0) {
-          setState(() {
-            _currentIndex = 0;
-          });
-          return false;
-        }
-        return true;
+        final pages = [
+          ShortenScreen(
+            isGuest: widget.isGuest,
+            userEmail: currentEmail,
+            onViewAll: () => _onTabTapped(3),
+            onGenerateQR: _onGenerateQR,
+          ),
+          _qrUrl != null
+              ? GeneratorScreen(
+                  key: ValueKey(_qrUrl),
+                  isGuest: widget.isGuest,
+                  userEmail: currentEmail,
+                  initialQrData: _qrUrl,
+                  onViewAll: () => _onTabTapped(3),
+                )
+              : GeneratorScreen(
+                  isGuest: widget.isGuest,
+                  userEmail: currentEmail,
+                  onViewAll: () => _onTabTapped(3),
+                ),
+          ScannerScreen(isGuest: widget.isGuest, userEmail: currentEmail),
+          HistoryScreen(isGuest: widget.isGuest, userEmail: currentEmail),
+          ProfileScreen(isGuest: widget.isGuest, userEmail: currentEmail),
+        ];
+
+        // Memuat history saat layar utama dipanggil
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.read<HistoryBloc>().add(LoadHistory(userId: widget.isGuest ? null : currentEmail, isGuest: widget.isGuest));
+        });
+
+        return WillPopScope(
+          onWillPop: () async {
+            if (_currentIndex != 0) {
+              setState(() {
+                _currentIndex = 0;
+              });
+              return false;
+            }
+            return true;
+          },
+          child: Scaffold(
+            body: IndexedStack(
+              index: _currentIndex,
+              children: pages,
+            ),
+            bottomNavigationBar: CustomBottomNavBar(
+              currentIndex: _currentIndex,
+              onTap: _onTabTapped,
+            ),
+          ),
+        );
       },
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
-        ),
-        bottomNavigationBar: CustomBottomNavBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-        ),
-      ),
     );
   }
 }

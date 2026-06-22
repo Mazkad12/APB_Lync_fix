@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(
             create: (context) => AuthBloc(
               authRepository: context.read<AuthRepository>(),
+              historyRepository: context.read<HistoryRepository>(),
             )..add(AppStarted()),
           ),
           BlocProvider(
