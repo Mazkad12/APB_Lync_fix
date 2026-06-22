@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../models/history_model.dart';
 import '../viewmodels/history/history_bloc.dart';
 import '../viewmodels/history/history_event.dart';
@@ -359,7 +360,22 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
           children: [
             Row(
               children: [
-                Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(16)), child: Icon(iconData, color: iconColor, size: 24)),
+                type == 'QR' 
+                  ? Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: QrImageView(
+                        data: originalUrl,
+                        version: QrVersions.auto,
+                        size: 40.0,
+                        foregroundColor: const Color(0xFF006D66),
+                      ),
+                    )
+                  : Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(16)), child: Icon(iconData, color: iconColor, size: 24)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -387,6 +403,21 @@ class _HistoryCardItemState extends State<HistoryCardItem> {
               const SizedBox(height: 16),
               Divider(color: Colors.grey.shade100, thickness: 1),
               const SizedBox(height: 16),
+              if (type == 'QR') ...[
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+                    child: QrImageView(
+                      data: originalUrl,
+                      version: QrVersions.auto,
+                      size: 150.0,
+                      foregroundColor: const Color(0xFF006D66),
+                    ),
+                  ),
+                ),
+              ],
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(16)),

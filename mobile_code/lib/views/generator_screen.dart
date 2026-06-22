@@ -295,12 +295,18 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: iconBgColor,
-                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Icon(iconData, color: iconColor, size: 20),
+                          child: QrImageView(
+                            data: item.originalUrl,
+                            version: QrVersions.auto,
+                            size: 32.0,
+                            foregroundColor: primaryTosca,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
